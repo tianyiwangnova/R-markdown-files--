@@ -1,0 +1,58 @@
+---
+title: "Comparing a CART model to Random Forest"
+author: "Tianyi Wang"
+date: "2017Äê8ÔÂ6ÈÕ"
+output: html_document
+---
+
+```{r}
+data(iris)
+summary(iris)
+library(ggplot2)
+ggplot(iris,aes(x=Petal.Width,y=Petal.Length))+geom_point(aes(colour=Species))
+library(rpart)
+library(caret)
+train.flag=createDataPartition(y=iris$Species,p=0.5,list=FALSE)
+training <- iris[train.flag,]
+Validation <- iris[-train.flag,]
+```
+
+#Build the CART model
+
+```{r}
+library(e1071)
+modfit <- train(Species~.,method="rpart",data=training) 
+library(rattle)
+fancyRpartPlot(modfit$finalModel)
+```
+
+Now, we need to check the predictive power of the CART model
+
+```{r}
+train.cart<-predict(modfit,newdata=training)
+table(train.cart,training$Species)
+pred.cart<-predict(modfit,newdata=Validation)
+table(pred.cart,Validation$Species)
+```
+
+visualize the cases for which the prediction went wrong.
+
+```{r}
+correct <- pred.cart == Validation$Species
+ggplot(Validation,aes(x=Petal.Width,y=Petal.Length))+geom_point(aes(colour=correct))
+```
+
+#Build a random forest model
+
+```{r}
+library(randomForest)
+library(randomForestSRC)
+library(caret)
+modfit <- train(Species~ .,method="rf",data=training)
+pred <- predict(modfit,training)
+table(pred,training$Species)
+train.cart<-predict(modfit,newdata=training)
+table(train.cart,training$Species)
+
+```
+
